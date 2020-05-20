@@ -1,11 +1,12 @@
 <template>
   <div id="app">
-    <router-view />
+    <router-view :key="$route.fullPath" />
   </div>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
+
 export default {
   name: "app",
   metaInfo: {
@@ -30,7 +31,12 @@ export default {
     ])
   },
   async mounted() {
-    this.$store.dispatch("authenticate");
+    try {
+      await this.$store.dispatch("authenticate");
+    } catch {
+      console.log("Failed to authenticate.");
+    }
+    this.$store.dispatch("socketInit");
   }
 };
 </script>
@@ -43,8 +49,8 @@ export default {
   box-sizing border-box
 
 html
-  font 16px/1.5 var(--sans)
-  background hsl(0,0,97%)
+  font 16px / 1.5 var(--sans)
+  background hsl(0, 0, 97%)
 
 body
   padding 3rem 0
@@ -57,36 +63,35 @@ a
   text-decoration none
   color var(--link)
   cursor pointer
+
   &:hover
     color var(--hover)
+
 p
   margin 0
 
 .dont-break-out
   /* These are technically the same, but use both */
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-
-  -ms-word-break: break-all;
+  overflow-wrap break-word
+  word-wrap break-word
+  -ms-word-break break-all
   /* This is the dangerous one in WebKit, as it breaks things wherever */
-  word-break: break-all;
+  word-break break-all
   /* Instead use this non-standard one: */
-  word-break: break-word;
-
+  word-break break-word
   /* Adds a hyphen where the word breaks, if supported (No Blink) */
-  -ms-hyphens: auto;
-  -moz-hyphens: auto;
-  -webkit-hyphens: auto;
-  hyphens: auto;
+  -ms-hyphens auto
+  -moz-hyphens auto
+  -webkit-hyphens auto
+  hyphens auto
 
 .break-address
   /* These are technically the same, but use both */
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-
-  -ms-word-break: break-all;
+  overflow-wrap break-word
+  word-wrap break-word
+  -ms-word-break break-all
   /* This is the dangerous one in WebKit, as it breaks things wherever */
-  word-break: break-all;
+  word-break break-all
   /* Instead use this non-standard one: */
-  word-break: break-word;
+  word-break break-word
 </style>

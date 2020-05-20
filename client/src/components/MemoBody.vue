@@ -49,10 +49,10 @@ export default {
       if (this.memo && this.memo.memo) {
         urls = Array.from(getUrls(this.memo.memo.body));
         // temporary workaround until we fully support unfurling
-        urls = urls.filter(url => this.isImage(url));
+        urls = urls.filter((url) => this.isImage(url));
       }
       return urls;
-    }
+    },
   },
   methods: {
     isImage(url) {
@@ -60,9 +60,9 @@ export default {
     },
     navToMemo() {
       this.$router.push({ name: "memo", params: { memo: this.memo.id } });
-    }
+    },
   },
-  props: ["memo"]
+  props: ["memo"],
 };
 </script>
 

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tendermint/sig": "^0.4.1",
+    "axios": "^0.19.2",
     "bip39": "^3.0.2",
     "byte-length": "^1.0.2",
     "core-js": "^3.6.4",
@@ -23,6 +24,7 @@
     "pug": "^2.0.4",
     "pug-plain-loader": "^1.0.0",
     "register-service-worker": "^1.6.2",
+    "socket.io": "^2.3.0",
     "vue": "^2.6.11",
     "vue-gtag": "^1.6.2",
     "vue-meta": "^2.3.3",

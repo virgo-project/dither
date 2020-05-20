@@ -25,6 +25,9 @@ export default {
           css += ` btn-icon--color-${this.color}`;
         }
       }
+      if (this.disabled) {
+        css += " btn-icon--disabled";
+      }
       return css;
     },
     imgSrc() {
@@ -34,7 +37,7 @@ export default {
       return require("../assets/feather/" + this.icon + ".svg");
     }
   },
-  props: ["color", "href", "icon", "size", "to", "type", "value"]
+  props: ["color", "href", "icon", "size", "to", "type", "value", "disabled"]
 };
 </script>
 
@@ -46,7 +49,6 @@ export default {
   align-items center
   justify-content center
   cursor pointer
-
   width 3rem
   height 3rem
 
@@ -62,8 +64,10 @@ export default {
   &.btn-icon--size-small
     width 2rem
     height 2rem
+
     &:hover
       background var(--hover-fg)
+
     img
       width 1rem
       height 1rem
@@ -71,14 +75,19 @@ export default {
 
   &.btn-icon--color
     cursor not-allowed
+
     &:hover
       background transparent
+
     img
-      opacity 1.0
+      opacity 1
 
   &.btn-icon--color-red .value
     color #f00
 
   &.btn-icon--color-green .value
     color #090
+
+  &.btn-icon--disabled
+    cursor not-allowed
 </style>

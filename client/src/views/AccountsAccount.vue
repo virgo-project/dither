@@ -23,13 +23,13 @@
 
     // .account-stat {{ account.memos }} memos
 
-  infinite-feed(:memos="posts" :queued="queuedPosts" :account="this.$route.params.address")
+  dc-timeline(endpoint="feed" :following="[account.id]" :address="address")
+
+  //- infinite-feed(:memos="posts" :queued="queuedPosts" :account="this.$route.params.address")
   app-footer
 </template>
 
 <script>
-import { orderBy, pickBy } from "lodash";
-
 import { mapGetters } from "vuex";
 import h from "../scripts/helpers.js";
 
@@ -40,6 +40,10 @@ import BtnIcon from "@/components/BtnIcon";
 import BtnLoadMore from "@/components/BtnLoadMore";
 import AvatarAccount from "@/components/AvatarAccount";
 import InfiniteFeed from "@/components/InfiniteFeed";
+import DcTimeline from "@/components/DcTimeline";
+
+const API = `http://${process.env.VUE_APP_API}`;
+
 export default {
   name: "page-accounts-account",
   components: {
@@ -49,7 +53,13 @@ export default {
     BtnIcon,
     BtnLoadMore,
     AvatarAccount,
-    InfiniteFeed
+    InfiniteFeed,
+    DcTimeline
+  },
+  data: function() {
+    return {
+      API
+    };
   },
   computed: {
     ...mapGetters(["memos", "queuedMemos", "accounts"]),
@@ -58,6 +68,9 @@ export default {
     },
     shortAddress() {
       return h.truncAddress(this.$route.params.address);
+    },
+    address() {
+      return this.$route.params.address;
     },
     account() {
       if (this.accounts[this.$route.params.address]) {
@@ -80,57 +93,15 @@ export default {
         return this.account.followers.length;
       }
       return 0;
-    },
-    posts() {
-      if (this.memos) {
-        let value = pickBy(
-          this.memos,
-          m =>
-            m.type !== "like" &&
-            m.type !== "comment" &&
-            m.address === this.$route.params.address
-        );
-        value = orderBy(value, m => parseInt(m.height), "desc");
-        return value;
-      }
-      return [];
-    },
-    queuedPosts() {
-      if (this.queuedMemos) {
-        let value = pickBy(
-          this.queuedMemos,
-          m =>
-            m.type !== "like" &&
-            m.type !== "comment" &&
-            m.address === this.$route.params.address
-        );
-        value = orderBy(value, m => parseInt(m.height), "desc");
-        return value;
-      }
-      return [];
     }
+  },
+  async created() {
+    await this.$store.dispatch("accounts/fetchById", this.account.id);
   },
   methods: {
     back() {
       this.$router.go(-1);
-    },
-    async memosOpenDBChannel() {
-      try {
-        await this.$store.dispatch(`memos/openDBChannel`, {
-          orderBy: ["timestamp", "desc"],
-          where: [["address", "==", this.$route.params.address]]
-        });
-      } catch {
-        console.warn("Channel is already open.");
-      }
     }
-  },
-  created() {
-    this.$store.dispatch("fetchFollowingList");
-  },
-  mounted() {
-    this.memosOpenDBChannel();
-    this.$store.dispatch("accounts/fetchById", this.$route.params.address);
   }
 };
 </script>
@@ -153,8 +124,10 @@ export default {
     font-weight bold
     display block
     color var(--txt)
+
   .account-address
     color var(--dim)
+
     &:hover
       text-decoration underline
 
@@ -165,6 +138,7 @@ export default {
   .account-stat
     padding 0 1rem
     color var(--txt)
+
     &:hover
       text-decoration underline
 

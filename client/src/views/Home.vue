@@ -7,66 +7,96 @@
       btn-icon(type="link" :to="{ name: 'memos-new' }" icon="edit")
     template(v-slot:btn-right v-else)
       btn-icon(type="link" :to="{ name: 'login' }" icon="log-in")
-  infinite-feed(v-if="posts" :memos="posts" :queued="queuedPosts" :following="following")
-  card-message(v-else)
-
+  dc-rt-memo(v-for="memo in timelineStream" :value="memo" :address="address")
+  .btn-load-more(style="btnStyle")
+    dc-btn(size="large" @click.native="fetchAndAddMemos" icon="refresh-cw") Show more
   app-footer
 </template>
 
+<style lang="stylus" scoped>
+.btn-load-more
+  height 5rem
+  display flex
+  align-items center
+  justify-content center
+</style>
+
 <script>
-import { pickBy } from "lodash";
 import { mapGetters } from "vuex";
 import AppFooter from "@/components/AppFooter";
-import BtnIcon from "@/components/BtnIcon";
-import BtnLoadMore from "@/components/BtnLoadMore";
-import CardMessage from "@/components/CardMessage";
-import InfiniteFeed from "@/components/InfiniteFeed";
 import AppHeader from "@/components/AppHeader";
-import CardMemo from "@/components/CardMemo";
+import DcCardMemo from "@/components/DcCardMemo";
+import axios from "axios";
+import DcTimeline from "@/components/DcTimeline";
+import BtnIcon from "@/components/BtnIcon";
+import DcRtMemo from "@/components/DcRtMemo";
+import DcBtn from "@/components/DcBtn";
+import { orderBy } from "lodash";
+
+const API = `http://${process.env.VUE_APP_API}`;
+
 export default {
   name: "page-index",
   components: {
     AppHeader,
     AppFooter,
+    DcCardMemo,
+    DcTimeline,
     BtnIcon,
-    BtnLoadMore,
-    CardMessage,
-    InfiniteFeed,
-    CardMemo
+    DcRtMemo,
+    DcBtn
   },
   computed: {
-    ...mapGetters(["memos", "userSignedIn", "queuedMemos", "following"]),
-    posts() {
-      let value = [];
-      if (this.memos) {
-        value = pickBy(this.memos, m => !m.channel);
-      }
-      return value;
-    },
-    queuedPosts() {
-      let value = [];
-      if (this.queuedMemos) {
-        value = pickBy(this.queuedMemos, m => !m.channel);
-      }
-      return value;
+    ...mapGetters(["userSignedIn", "incoming", "outgoing"]),
+    timelineStream() {
+      let events = [...this.incoming, ...this.outgoing];
+      events = events.filter(memo => {
+        const isPost = memo.type === "post";
+        const isFollowing = this.following.includes(memo.from_address);
+        return isPost && isFollowing;
+      });
+      return orderBy([...events, ...this.timeline], "created_at", "desc");
     }
   },
+  data: function() {
+    return {
+      address: null,
+      following: [],
+      settings: null,
+      API,
+      timeline: []
+    };
+  },
   methods: {
-    memosOpenDBChannel(following) {
-      following.forEach(async f => {
-        try {
-          await this.$store.dispatch(`memos/openDBChannel`, {
-            where: [["address", "==", f]]
-          });
-        } catch {
-          console.warn("Channel is already open.");
-        }
+    async fetchFollowing() {
+      const from_address = this.address && `from_address=${this.address}`;
+      const url = `${API}/following?${from_address}`;
+      return (await axios.get(url)).data;
+    },
+    async fetchAndAddMemos() {
+      const last = this.timeline[this.timeline.length - 1];
+      const after = last ? `after=${last.created_at}` : "";
+      const from_address = this.address ? `from_address=${this.address}` : "";
+      const timeline = (
+        await axios.get(`${API}/timeline?${from_address}&${after}`)
+      ).data.map(tx => {
+        return {
+          ...tx,
+          received_at: new Date().getTime()
+        };
       });
+      this.timeline = [...this.timeline, ...timeline];
     }
   },
   async created() {
-    const following = await this.$store.dispatch("fetchFollowingList");
-    this.memosOpenDBChannel(following);
+    try {
+      this.settings = await this.$store.dispatch("fetchSettings");
+    } catch {
+      console.log("Failed to fetch user settings.");
+    }
+    this.address = this.settings && this.settings.wallet.address;
+    this.fetchAndAddMemos();
+    this.following = await this.fetchFollowing();
   }
 };
 </script>

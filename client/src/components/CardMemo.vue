@@ -76,7 +76,7 @@ export default {
     CornerError,
     CornerSpinner,
     AvatarAccount,
-    MemoBody
+    MemoBody,
   },
   computed: {
     ...mapGetters([
@@ -84,7 +84,7 @@ export default {
       "settings",
       "userSignedIn",
       "accounts",
-      "queuedMemos"
+      "queuedMemos",
     ]),
     timeAgo() {
       return h.timeAgo(this.memo.timestamp);
@@ -147,7 +147,7 @@ export default {
       if (memos && this.fromAddress) {
         return find(
           memos,
-          m =>
+          (m) =>
             m.parent === this.memo.id &&
             m.address === this.fromAddress &&
             m.type === "like"
@@ -160,14 +160,14 @@ export default {
       if (memos && this.fromAddress) {
         return find(
           memos,
-          m =>
+          (m) =>
             m.parent === this.memo.id &&
             m.address === this.fromAddress &&
             m.type === "repost"
         );
       }
       return false;
-    }
+    },
   },
   methods: {
     shortAddress(address) {
@@ -189,8 +189,8 @@ export default {
         from: this.fromAddress,
         memo: JSON.stringify({
           type: "repost",
-          parent: this.memo.id
-        })
+          parent: this.memo.id,
+        }),
       });
       this.$store.dispatch("addToMemoQueue", queuedMemo);
     },
@@ -207,8 +207,8 @@ export default {
         from: this.fromAddress,
         memo: JSON.stringify({
           type: "like",
-          parent: this.memo.id
-        })
+          parent: this.memo.id,
+        }),
       });
       this.$store.dispatch("addToMemoQueue", queuedMemo);
     },
@@ -218,8 +218,8 @@ export default {
         this.$store.dispatch("memos/fetchAndAdd", {
           where: [
             ["parent", "==", this.memo.id],
-            ["address", "==", this.fromAddress]
-          ]
+            ["address", "==", this.fromAddress],
+          ],
         });
       } else {
         // console.log("no interactions, skipping...");
@@ -227,13 +227,13 @@ export default {
     },
     reposterDisplayName(address) {
       return h.getDisplayName(this.accounts, address);
-    }
+    },
   },
   mounted() {
     this.$store.dispatch("accounts/fetchById", this.memo.address);
     this.checkForUserInteractions();
   },
-  props: ["memo"]
+  props: ["memo"],
 };
 </script>
 
